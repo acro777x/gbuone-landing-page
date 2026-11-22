@@ -1,9 +1,11 @@
 /* ============================================================
-   GBU One — motion & typography layer (paste before </style>)
-   Transform/opacity only. Reduced motion disables everything.
+   GBU One — SAFE motion & typography layer
+   ============================================================
+   RULE: content is NEVER hidden by CSS waiting for JavaScript.
+   Every animation ends with opacity 1, so even with JS disabled,
+   a slow device, or a failed observer, the page is fully visible.
    ============================================================ */
 
-/* --- Fluid, refined type scale -------------------------------- */
 :root {
   --step--1: clamp(0.83rem, 0.80rem + 0.14vw, 0.92rem);
   --step-0:  clamp(0.98rem, 0.94rem + 0.18vw, 1.08rem);
@@ -11,8 +13,6 @@
   --step-2:  clamp(1.52rem, 1.35rem + 0.80vw, 2.05rem);
   --step-3:  clamp(2.05rem, 1.70rem + 1.70vw, 3.10rem);
   --step-4:  clamp(2.60rem, 2.00rem + 3.00vw, 4.25rem);
-  --font-heading: 'Poppins', system-ui, -apple-system, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -20,7 +20,7 @@ html { scroll-behavior: smooth; text-rendering: optimizeLegibility; }
 body { font-size: var(--step-0); -webkit-font-smoothing: antialiased; }
 
 h1, h2, h3, .hero-title, .section-title {
-  font-family: var(--font-heading);
+  font-family: 'Poppins', system-ui, sans-serif;
   letter-spacing: -0.028em;
   line-height: 1.12;
   text-wrap: balance;
@@ -29,72 +29,57 @@ h1, .hero-title { font-size: var(--step-4); font-weight: 700; }
 h2, .section-title { font-size: var(--step-2); font-weight: 600; }
 p { text-wrap: pretty; line-height: 1.68; }
 
-/* --- Entrance reveal (JS adds .is-visible) -------------------- */
-.reveal {
-  opacity: 0;
-  transform: translate3d(0, 26px, 0);
-  transition:
-    opacity 720ms var(--ease-out),
-    transform 720ms var(--ease-out);
-  transition-delay: var(--reveal-delay, 0ms);
-  will-change: opacity, transform;
+/* --- Entrance: keyframes, NOT opacity:0 waiting for JS ---------- */
+@keyframes gbu-rise-in {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); }
+  to   { opacity: 1; transform: none; }              /* always ends visible */
 }
-.reveal.is-visible { opacity: 1; transform: none; }
-
-/* Stagger children of a revealed group. */
-.reveal-group > * {
-  opacity: 0;
-  transform: translate3d(0, 18px, 0);
-  transition:
-    opacity 620ms var(--ease-out),
-    transform 620ms var(--ease-out);
-  transition-delay: calc(var(--i, 0) * 70ms);
-}
-.reveal-group.is-visible > * { opacity: 1; transform: none; }
-
-/* --- Hero: letter-by-letter rise for the wordmark ------------- */
-@keyframes gbu-rise {
-  from { opacity: 0; transform: translate3d(0, 0.5em, 0) rotate(3deg); }
+@keyframes gbu-letter-rise {
+  from { opacity: 0; transform: translate3d(0, 0.45em, 0) rotate(3deg); }
   to   { opacity: 1; transform: none; }
 }
+
+/* One-shot entrance on the hero only. `both` keeps the final visible state. */
+.hero-title, .hero-subtitle, .hero-cta, .hero-badge {
+  animation: gbu-rise-in 760ms var(--ease-out) both;
+}
+.hero-subtitle { animation-delay: 90ms; }
+.hero-cta { animation-delay: 160ms; }
+.hero-badge { animation-delay: 40ms; }
+
+/* Staggered letters: each span animates to opacity 1 and stays there. */
 .gbu-rise > span {
   display: inline-block;
-  opacity: 0;
-  animation: gbu-rise 760ms var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 55ms + 120ms);
+  animation: gbu-letter-rise 700ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 45ms + 80ms);
 }
 
-/* --- Micro-interactions: buttons ------------------------------ */
+/* --- Micro-interactions (no hiding) ----------------------------- */
 a, button { -webkit-tap-highlight-color: transparent; }
 .btn, .cta-button, .pill-button, a[class*="btn"], button[class*="btn"] {
-  transition:
-    transform 220ms var(--ease-out),
-    box-shadow 220ms var(--ease-out),
-    background-color 220ms var(--ease-out);
+  transition: transform 220ms var(--ease-out),
+              box-shadow 220ms var(--ease-out),
+              background-color 220ms var(--ease-out);
 }
 .btn:hover, .cta-button:hover, .pill-button:hover {
   transform: translate3d(0, -3px, 0);
   box-shadow: 0 14px 30px rgba(194, 65, 12, 0.22);
 }
-.btn:active, .cta-button:active, .pill-button:active { transform: translate3d(0, 0, 0) scale(0.98); }
-.btn:focus-visible, a:focus-visible, button:focus-visible {
-  outline: 3px solid #c2410c;
-  outline-offset: 3px;
-  border-radius: 8px;
+.btn:active, .cta-button:active, .pill-button:active {
+  transform: translate3d(0, 0, 0) scale(0.98);
 }
-/* Arrow nudge on hover */
+.btn:focus-visible, a:focus-visible, button:focus-visible {
+  outline: 3px solid #c2410c; outline-offset: 3px; border-radius: 8px;
+}
 .btn .arrow, .cta-button .arrow, a[class*="btn"] .arrow {
-  display: inline-block;
-  transition: transform 220ms var(--ease-out);
+  display: inline-block; transition: transform 220ms var(--ease-out);
 }
 .btn:hover .arrow, .cta-button:hover .arrow { transform: translateX(4px); }
 
-/* --- Cards / chips: tactile lift ------------------------------ */
 .card, .feature-card, .school-chip, .avatar-card, .faq-item {
-  transition:
-    transform 260ms var(--ease-out),
-    box-shadow 260ms var(--ease-out),
-    border-color 260ms var(--ease-out);
+  transition: transform 260ms var(--ease-out),
+              box-shadow 260ms var(--ease-out),
+              border-color 260ms var(--ease-out);
 }
 .card:hover, .feature-card:hover, .avatar-card:hover {
   transform: translate3d(0, -6px, 0);
@@ -102,36 +87,30 @@ a, button { -webkit-tap-highlight-color: transparent; }
 }
 .school-chip:hover { transform: translate3d(0, -3px, 0) scale(1.03); }
 
-/* --- Header: condense on scroll -------------------------------- */
 .site-header, header[class*="header"] {
   transition: padding 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
 }
 .site-header.is-condensed, header[class*="header"].is-condensed {
-  padding-block: 8px;
-  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.07);
+  padding-block: 8px; box-shadow: 0 8px 24px rgba(31, 41, 55, 0.07);
 }
 
-/* --- Soft ambient hero glow (slow, no wobble) ------------------ */
 @keyframes gbu-glow {
   0%, 100% { opacity: 0.45; transform: scale(1); }
   50%      { opacity: 0.70; transform: scale(1.06); }
 }
-.hero-glow {
-  animation: gbu-glow 9s ease-in-out infinite;
-  pointer-events: none;
-}
+.hero-glow { animation: gbu-glow 9s ease-in-out infinite; pointer-events: none; }
 
-/* --- Scroll progress bar --------------------------------------- */
 #gbu-progress {
   position: fixed; top: 0; left: 0; height: 3px; width: 0;
   background: linear-gradient(90deg, #c2410c, #f59e0b);
-  z-index: 9999; pointer-events: none;
-  transition: width 90ms linear;
+  z-index: 9999; pointer-events: none; transition: width 90ms linear;
 }
 
-/* --- Reduced motion: total kill switch ------------------------- */
+/* Reduced motion: everything visible, no movement. */
 @media (prefers-reduced-motion: reduce) {
-  .reveal, .reveal-group > *, .gbu-rise > span { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .hero-title, .hero-subtitle, .hero-cta, .hero-badge, .gbu-rise > span {
+    animation: none !important; opacity: 1 !important; transform: none !important;
+  }
   .hero-glow { animation: none !important; }
   #gbu-progress { display: none; }
 }

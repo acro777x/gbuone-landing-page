@@ -1,10 +1,10 @@
 <script>
-/* GBU One — motion behaviours (paste before </body>, no dependencies) */
+/* GBU One — SAFE motion behaviours. Nothing here hides content. */
 (function () {
   'use strict';
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* 1. Scroll progress bar */
+  /* 1. Scroll progress bar (purely additive). */
   if (!reduce) {
     var progress = document.createElement('div');
     progress.id = 'gbu-progress';
@@ -12,37 +12,11 @@
     document.body.appendChild(progress);
   }
 
-  /* 2. Reveal on scroll — PERFORMS: brings content into view, never idles. */
-  var targets = document.querySelectorAll(
-    'section, .card, .feature-card, .school-chip, .avatar-card, .faq-item, .reveal'
-  );
-  if (!reduce && 'IntersectionObserver' in window) {
-    targets.forEach(function (el, i) {
-      if (!el.classList.contains('reveal')) el.classList.add('reveal');
-      el.style.setProperty('--reveal-delay', (i % 6) * 60 + 'ms');
-    });
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target);
-      });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-    targets.forEach(function (el) { observer.observe(el); });
-  } else {
-    targets.forEach(function (el) { el.classList.add('is-visible'); });
-  }
+  /* 2. Header condense on scroll. */
+  var header = document.querySelector('.site-header, header[class*="header"]');
 
-  /* 3. Stagger children of grids/lists. */
-  document.querySelectorAll('.reveal-group, [class*="grid"], [class*="chips"]').forEach(function (group) {
-    Array.prototype.forEach.call(group.children, function (child, i) {
-      child.style.setProperty('--i', i);
-    });
-    group.classList.add('reveal-group');
-  });
-
-  /* 4. Hero wordmark split: wrap each character for a staggered rise.
-        Only the element marked data-split is touched. */
+  /* 3. Hero wordmark letters: split into spans; CSS animates them to visible.
+        If this script fails, the original plain text remains fully visible. */
   document.querySelectorAll('[data-split]').forEach(function (el) {
     var text = el.textContent || '';
     el.textContent = '';
@@ -55,8 +29,7 @@
     el.classList.add('gbu-rise');
   });
 
-  /* 5. Header condense + progress on scroll (rAF-throttled). */
-  var header = document.querySelector('.site-header, header[class*="header"]');
+  /* 4. Scroll handler (rAF-throttled). Never touches visibility. */
   var ticking = false;
   function onScroll() {
     var y = window.scrollY || document.documentElement.scrollTop || 0;
@@ -72,27 +45,26 @@
   }, { passive: true });
   onScroll();
 
-  /* 6. Count-up for numeric stats. Runs once when visible. */
+  /* 5. Count-up: progressively enhances a number, never hides it. */
   if (!reduce && 'IntersectionObserver' in window) {
     var counters = document.querySelectorAll('[data-count]');
-    var counterObserver = new IntersectionObserver(function (entries) {
+    var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
         var el = entry.target;
         var target = Number(el.getAttribute('data-count')) || 0;
         var start = performance.now();
-        var duration = 1100;
         function step(now) {
-          var t = Math.min((now - start) / duration, 1);
+          var t = Math.min((now - start) / 1100, 1);
           var eased = 1 - Math.pow(1 - t, 3);
           el.textContent = Math.round(target * eased).toLocaleString('en-IN');
-          if (t < 1) requestAnimationFrame(step);
+          if (t < 1) window.requestAnimationFrame(step);
         }
-        requestAnimationFrame(step);
-        counterObserver.unobserve(el);
+        window.requestAnimationFrame(step);
+        observer.unobserve(el);
       });
-    }, { threshold: 0.5 });
-    counters.forEach(function (el) { counterObserver.observe(el); });
+    }, { threshold: 0.4 });
+    counters.forEach(function (el) { observer.observe(el); });
   }
 })();
 </script>
