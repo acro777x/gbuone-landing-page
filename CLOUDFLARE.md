@@ -1,47 +1,63 @@
-# Deploying the OTP confirm page on Cloudflare (baby steps)
+# Cloudflare Workers deploy — exact steps (IMPORTANT: read first)
 
-Your site is already live on Cloudflare. Two small things remain.
+## 🔴 STOP: your current configuration has a SECRET KEY in it
 
-## Step 1 — add the two PUBLIC values to Cloudflare
+In the screenshot the variable `EXPO_PUBLIC_SUPABASE_ANON_KEY` contains:
 
-In the Cloudflare dashboard, open your **gbuone.space** project:
+```
+sb_secret_kSUtBv...
+```
 
-1. **Settings** → **Environment variables** (Pages) or **Variables** (Workers).
-2. Add these **two** variables (plain text, not secret — they are designed to be public):
-   - Name `EXPO_PUBLIC_SUPABASE_URL` → value `https://pjnxllnncsoroevgfbmt.supabase.co`
-   - Name `EXPO_PUBLIC_SUPABASE_ANON_KEY` → value starting with `sb_publishable_...` (copy it from the app's `.env`)
+That is a **secret key**, not a publishable key. Our build script correctly
+REFUSES to generate the website config with a secret key — that is why the
+last build failed. A secret key on a public website would give every visitor
+full database access.
+
+**Fix it now:**
+1. Cloudflare dashboard → this project → **Settings → Variables and secrets**.
+2. Find `EXPO_PUBLIC_SUPABASE_ANON_KEY` → click edit → replace the value with
+   the **`sb_publishable_...`** key from the app's `.env`.
+   It starts with `sb_publishable_`, NOT `sb_secret_`.
 3. Save.
 
-⚠️ **Never** put an `sb_secret_...` key here. If you do, the build script refuses to generate the file and the deploy fails — that is the guard working.
+(The old `sb_secret_kSUtBv...` value should also be **revoked/rotated** in
+Supabase → Project Settings → API Keys, because it was pasted into a
+dashboard field and shared in a screenshot.)
 
-## Step 2 — make Cloudflare generate `auth/config.js`
+The other variable, `EXPO_PUBLIC_SUPABASE_URL`, is fine — it is just a URL.
 
-In **Settings → Build & deploy**:
+## Build settings
 
-- **Build command:** `node setup_landing_config.js`
-- **Build output directory:** `.` (the repo root — it is a static site)
+The screenshot shows **Workers Builds** (`Deploy command: npx wrangler deploy`).
+Set it to:
 
-Trigger a **Retry deploy**. The script reads the two environment variables and writes `auth/config.js` during the build. It is never committed to git.
+| Field | Value |
+|---|---|
+| Production branch | `main` |
+| Build command | `npm install && npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Root directory | `/` |
 
-(If your project has no build command because it deploys files as-is, set the build command above; Cloudflare Pages supports it. For a pure Workers setup with no build step, generate `auth/config.js` locally with
-`node setup_landing_config.js ../gbu-one/.env` and upload that one file next to `auth/confirm.html`.)
+The repository now contains `wrangler.toml` (static assets) and
+`package.json` (pins wrangler), so `npx wrangler deploy` works.
 
-## Step 3 — verify
+`npm run build` runs `node setup_landing_config.js`, which reads the two
+environment variables and writes `auth/config.js` during the build.
+It fails loudly if a secret key is supplied — intentionally.
 
-Open in a browser while logged out:
+## Reconnect Git
 
-```
-https://gbuone.space/auth/confirm/
-```
+One screenshot says *"This project is disconnected from your Git account"*.
+Click **Manage → reconnect** so pushes to `main` trigger builds. Another
+screenshot already shows *"You can now push a commit to start your first
+build"* — after reconnecting, push a small commit or click **Retry deploy**.
 
-You should see **"This link has no confirmation code…"** — that proves the page loads and the config is present. If instead you see **"not configured"**, the two environment variables are missing or wrong in Cloudflare.
+## Verify
 
-## Step 4 — Supabase dashboard (do this once, if not already)
+- `https://gbuone.space/` should show the new motion design (~96 KB page).
+- `https://gbuone.space/auth/confirm/` should load (HTTP 200).
+- `https://gbuone.space/auth/config.js` should contain a `sb_publishable_` key
+  and no secret.
 
-**Authentication → URL Configuration:**
-- **Site URL:** `https://gbuone.space`
-- **Redirect URLs:** `https://gbuone.space/auth/confirm` and `gbuone://auth/done`
-
-## Step 5 — real test
-
-Sign up in the app with your own email → open the email on your phone → tap the confirm button → it should open **GBU One** automatically. Then close the app fully, reopen, and log in with the same address and password.
+Then in the app: sign up with your own email → tap the email link on your
+phone → GBU One opens automatically.
