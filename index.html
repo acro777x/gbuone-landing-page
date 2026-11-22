@@ -1279,11 +1279,12 @@ p { text-wrap: pretty; line-height: 1.68; }
 .hero-cta { animation-delay: 160ms; }
 .hero-badge { animation-delay: 40ms; }
 
-/* Staggered letters: each span animates to opacity 1 and stays there. */
-.gbu-rise > span {
+/* Staggered WORDS: each word animates to opacity 1 and stays there.
+   Never split into characters - that breaks natural line wrapping. */
+.gbu-rise > .gbu-word {
   display: inline-block;
   animation: gbu-letter-rise 700ms var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 45ms + 80ms);
+  animation-delay: calc(var(--i, 0) * 90ms + 80ms);
 }
 
 /* --- Micro-interactions (no hiding) ----------------------------- */
@@ -1340,7 +1341,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 
 /* Reduced motion: everything visible, no movement. */
 @media (prefers-reduced-motion: reduce) {
-  .hero-title, .hero-subtitle, .hero-cta, .hero-badge, .gbu-rise > span {
+  .hero-title, .hero-subtitle, .hero-cta, .hero-badge, .gbu-rise > .gbu-word {
     animation: none !important; opacity: 1 !important; transform: none !important;
   }
   .hero-glow { animation: none !important; }
@@ -2072,7 +2073,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
           <li><a href="#install">Install</a></li>
           <li><a href="#faq">FAQ</a></li>
           <li><a href="#privacy">Privacy</a></li>
-          <li><a href="mailto:info@gbu.ac.in">Contact</a></li>
+          <li><a href="mailto:support@gbuone.space">Contact</a></li>
         </ul>
       </div>
 
@@ -2104,7 +2105,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
       apkSize: "123 MB",
       sha256: "2818181725f7c51ab0e90dbf434fc1f042b696f6d15c3b51f6f7fa4612bb90cc",
       iosAvailable: false,
-      contactEmail: "info@gbu.ac.in"
+      contactEmail: "support@gbuone.space"
     };
 
     // 1. Synchronize Configuration & OS Detection
@@ -2424,16 +2425,20 @@ a, button { -webkit-tap-highlight-color: transparent; }
   /* 2. Header condense on scroll. */
   var header = document.querySelector('.site-header, header[class*="header"]');
 
-  /* 3. Hero wordmark letters: split into spans; CSS animates them to visible.
-        If this script fails, the original plain text remains fully visible. */
+  /* 3. Hero wordmark: split into WORDS (never characters), so words stay
+        intact and wrap naturally on narrow screens. If this script fails,
+        the original text remains fully visible. */
   document.querySelectorAll('[data-split]').forEach(function (el) {
-    var text = el.textContent || '';
+    var words = (el.textContent || '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return;
     el.textContent = '';
-    Array.prototype.forEach.call(text, function (char, i) {
+    words.forEach(function (word, i) {
       var span = document.createElement('span');
-      span.textContent = char === ' ' ? '\u00a0' : char;
+      span.className = 'gbu-word';
+      span.textContent = word;
       span.style.setProperty('--i', i);
       el.appendChild(span);
+      if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
     });
     el.classList.add('gbu-rise');
   });
@@ -2476,7 +2481,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
     counters.forEach(function (el) { observer.observe(el); });
   }
 })();
-</script>
 
+</script>
 </body>
 </html>

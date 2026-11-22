@@ -1,4 +1,3 @@
-<script>
 /* GBU One — SAFE motion behaviours. Nothing here hides content. */
 (function () {
   'use strict';
@@ -15,16 +14,20 @@
   /* 2. Header condense on scroll. */
   var header = document.querySelector('.site-header, header[class*="header"]');
 
-  /* 3. Hero wordmark letters: split into spans; CSS animates them to visible.
-        If this script fails, the original plain text remains fully visible. */
+  /* 3. Hero wordmark: split into WORDS (never characters), so words stay
+        intact and wrap naturally on narrow screens. If this script fails,
+        the original text remains fully visible. */
   document.querySelectorAll('[data-split]').forEach(function (el) {
-    var text = el.textContent || '';
+    var words = (el.textContent || '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return;
     el.textContent = '';
-    Array.prototype.forEach.call(text, function (char, i) {
+    words.forEach(function (word, i) {
       var span = document.createElement('span');
-      span.textContent = char === ' ' ? '\u00a0' : char;
+      span.className = 'gbu-word';
+      span.textContent = word;
       span.style.setProperty('--i', i);
       el.appendChild(span);
+      if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
     });
     el.classList.add('gbu-rise');
   });
@@ -67,4 +70,3 @@
     counters.forEach(function (el) { observer.observe(el); });
   }
 })();
-</script>

@@ -47,11 +47,12 @@ p { text-wrap: pretty; line-height: 1.68; }
 .hero-cta { animation-delay: 160ms; }
 .hero-badge { animation-delay: 40ms; }
 
-/* Staggered letters: each span animates to opacity 1 and stays there. */
-.gbu-rise > span {
+/* Staggered WORDS: each word animates to opacity 1 and stays there.
+   Never split into characters - that breaks natural line wrapping. */
+.gbu-rise > .gbu-word {
   display: inline-block;
   animation: gbu-letter-rise 700ms var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 45ms + 80ms);
+  animation-delay: calc(var(--i, 0) * 90ms + 80ms);
 }
 
 /* --- Micro-interactions (no hiding) ----------------------------- */
@@ -108,7 +109,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 
 /* Reduced motion: everything visible, no movement. */
 @media (prefers-reduced-motion: reduce) {
-  .hero-title, .hero-subtitle, .hero-cta, .hero-badge, .gbu-rise > span {
+  .hero-title, .hero-subtitle, .hero-cta, .hero-badge, .gbu-rise > .gbu-word {
     animation: none !important; opacity: 1 !important; transform: none !important;
   }
   .hero-glow { animation: none !important; }
