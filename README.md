@@ -67,3 +67,21 @@ This repository is ready for instant deployment on GitHub Pages:
 ## ⚖️ Disclaimer
 
 GBU One is an independent, open-source student initiative created by scholars of Gautam Buddha University. It is not officially operated by Gautam Buddha University administration.
+
+
+---
+
+## Email confirmation subpage
+
+`/auth/confirm/` handles Supabase sign-up and password-reset links.
+Run `node setup_landing_config.js ../gbu-one/.env` on your build machine
+to generate `auth/config.js` (git-ignored). Only an `sb_publishable_`
+key may be used — the website source is public. See `AUTH_SETUP.md`.
+
+## Motion & typography
+
+The page includes a no-dependency motion layer: scroll reveals, staggered
+hero letters, tactile button/card micro-interactions, a scroll progress bar
+and a fluid type scale. Everything is disabled under
+`@media (prefers-reduced-motion: reduce)`. Source snippets are kept in
+`motion.css` and `motion.js`; both are already inlined in `index.html`.

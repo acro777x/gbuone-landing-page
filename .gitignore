@@ -1,0 +1,5 @@
+# Generated from .env - public values only, but never commit it.
+auth/config.js
+
+# Local preview helper
+_serve.bat
