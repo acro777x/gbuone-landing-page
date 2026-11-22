@@ -1,5 +1,8 @@
-﻿# Generated from .env - public values only, but never commit it.
-auth/config.js
+﻿# auth/config.js is a COMMITTED FALLBACK containing only public sb_publishable_
+# values. setup_landing_config.js regenerates it at build time from Cloudflare
+# environment variables; the committed copy keeps the confirmation page working
+# when a deployment does not run that build step. Never put a secret key here -
+# the generator refuses to write one.
 landing/auth/config.js
 
 # Local preview helper
