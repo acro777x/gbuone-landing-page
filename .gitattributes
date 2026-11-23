@@ -1,1 +1,10 @@
+# Keep text files LF in the working tree. Generated SQL and the landing HTML
+# are compared byte-for-byte with CI output; CRLF drift caused false failures.
 *.apk filter=lfs diff=lfs merge=lfs -text
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+_headers text eol=lf
