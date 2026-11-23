@@ -27,7 +27,12 @@
     // Capture the one-time token BEFORE removing it from the URL. The previous
     // page scrubbed first and then read location.search, so it always saw an
     // empty string and could never verify anything.
-    try { window.__GBU_LINK__ = location.search || ''; } catch (e) { window.__GBU_LINK__ = ''; }
+    try {
+      window.__GBU_LINK__ = location.search || '';
+      // Supabase's standard ConfirmationURL flow puts the token in the URL
+      // FRAGMENT, not the query string. Capture it before scrubbing too.
+      window.__GBU_HASH__ = location.hash || '';
+    } catch (e) { window.__GBU_LINK__ = ''; window.__GBU_HASH__ = ''; }
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
   </script>
   <style>
@@ -68,37 +73,75 @@
         again.hidden = false;
       }
 
-      var params;
-      try { params = new URLSearchParams(window.__GBU_LINK__ || ''); }
-      catch (e) { fail('This link could not be read. Open the newest email from GBU One.'); return; }
+      var query, fragment;
+      try {
+        query = new URLSearchParams(window.__GBU_LINK__ || '');
+        fragment = new URLSearchParams((window.__GBU_HASH__ || '').replace(/^#/, ''));
+      } catch (e) { fail('This link could not be read. Open the newest email from GBU One.'); return; }
 
-      var tokenHash = (params.get('token_hash') || '').trim();
-      var type = (params.get('type') || '').trim();
+      var tokenHash = (query.get('token_hash') || '').trim();
+      var type = (query.get('type') || '').trim();
+      var accessToken = (fragment.get('access_token') || '').trim();
+      var refreshToken = (fragment.get('refresh_token') || '').trim();
+      var fragType = (fragment.get('type') || '').trim();
 
-      if (!tokenHash) {
-        // PKCE `code` links are not used by this app; fail closed rather than
-        // silently treating them as a signup.
-        fail('This link has no confirmation code. Open the newest email from GBU One.');
+      function openApp(link) {
+        open.href = link;
+        open.hidden = false;
+        try { location.href = link; } catch (e) { /* manual button remains */ }
+      }
+
+      // FORMAT 1 (preferred): token_hash + type in the query string. Relay the
+      // same one-time token to the app; it calls verifyOtp() and gets a session.
+      if (tokenHash) {
+        if (ALLOWED_TYPES.indexOf(type) === -1) {
+          fail('This confirmation link is not supported. Open the newest email from GBU One.');
+          return;
+        }
+        var deepLink = 'gbuone://auth/confirm?token_hash=' +
+          encodeURIComponent(tokenHash) + '&type=' + encodeURIComponent(type);
+        open.href = deepLink;
+        open.hidden = false;
+        title.textContent = 'Opening GBU One';
+        message.textContent = type === 'recovery'
+          ? 'Your reset link is valid. GBU One will open so you can choose a new password.'
+          : 'Your email is being confirmed in GBU One.';
+        try { location.href = deepLink; } catch (e) { /* manual button remains */ }
         return;
       }
-      if (ALLOWED_TYPES.indexOf(type) === -1) {
-        fail('This confirmation link is not supported. Open the newest email from GBU One.');
+
+      // FORMAT 2: Supabase's standard ConfirmationURL puts the tokens in the
+      // URL FRAGMENT. Verify them against the Auth server with the PUBLIC key,
+      // then open the app's honest result screen. We never write the tokens to
+      // the DOM, console or another URL, and never claim to have signed in.
+      if (accessToken && refreshToken && ALLOWED_TYPES.indexOf(fragType) !== -1) {
+        var config = window.GBU_ONE_CONFIG || {};
+        var url = config.SUPABASE_URL || '';
+        var key = config.PUBLISHABLE_KEY || '';
+        if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url) ||
+            !/^sb_publishable_[A-Za-z0-9_-]+$/.test(key)) {
+          fail('This page is not configured. Ask the app owner to run the website setup.');
+          return;
+        }
+        title.textContent = 'Checking your link';
+        fetch(url.replace(/\/$/, '') + '/auth/v1/user', {
+          headers: { apikey: key, Authorization: 'Bearer ' + accessToken }
+        })
+          .then(function (r) { if (!r.ok) throw new Error('invalid'); return r.json(); })
+          .then(function () {
+            title.textContent = 'Email link verified';
+            message.textContent = fragType === 'recovery'
+              ? 'Your reset link is valid. Open GBU One to choose a new password.'
+              : 'Your email is verified. Open GBU One and sign in to continue.';
+            openApp('gbuone://auth/done?verified=1');
+          })
+          .catch(function () {
+            fail('This link is invalid or has expired. Open the newest email from GBU One.');
+          });
         return;
       }
 
-      // Relay the SAME one-time token to the app. The app calls verifyOtp() and
-      // receives a real session; the browser never claims to have signed in.
-      var deepLink = 'gbuone://auth/confirm?token_hash=' +
-        encodeURIComponent(tokenHash) + '&type=' + encodeURIComponent(type);
-      open.href = deepLink;
-      open.hidden = false;
-      title.textContent = 'Opening GBU One';
-      message.textContent = type === 'recovery'
-        ? 'Your reset link is valid. GBU One will open so you can choose a new password.'
-        : 'Your email is being confirmed in GBU One.';
-
-      // Give the app a moment to register as a deep-link handler, then hand off.
-      try { location.href = deepLink; } catch (e) { /* manual button remains */ }
+      fail('This link has no confirmation code. Open the newest email from GBU One.');
     })();
   </script>
 </body>
