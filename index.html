@@ -1122,8 +1122,14 @@
     }
     .footer-nav {
       display: flex;
-      gap: 24px;
+      flex-wrap: wrap;
+      gap: 12px 20px;
       list-style: none;
+    }
+    @media (min-width: 768px) {
+      .footer-nav {
+        gap: 24px;
+      }
     }
     .footer-nav a {
       color: #CBD5E1;
@@ -1392,8 +1398,8 @@ a, button { -webkit-tap-highlight-color: transparent; }
             <p>Timetable, notices, exam dates and past papers for Gautam Buddha University, in one app that works without internet.</p>
             
             <div style="margin-top: 32px;" id="heroActionWrapper">
-              <a href="assets/gbu-one-latest-release.apk" class="btn btn-gold action-download-btn" id="heroDownloadBtn" download>Download for Android</a>
-              <div class="hero-meta" id="heroMetaText">Free. Version 1.0.0 · 123 MB · No sign-up needed</div>
+              <a href="https://github.com/acro777x/gbuone-landing-page/releases/latest/download/gbu-one.apk" class="btn btn-gold action-download-btn" id="heroDownloadBtn" download>Download for Android</a>
+              <div class="hero-meta" id="heroMetaText">Free. Version 1.0.0 · 98.6 MB · No sign-up needed</div>
             </div>
 
             <div class="hero-sublinks">
@@ -2045,7 +2051,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
         <h2>Next class in 24 minutes. Know where it is.</h2>
         <p>Get the verified Android APK and take your timetable offline.</p>
         <div id="closingActionWrapper">
-          <a href="assets/gbu-one-latest-release.apk" class="btn btn-gold action-download-btn" id="closingDownloadBtn" download>Download for Android</a>
+          <a href="https://github.com/acro777x/gbuone-landing-page/releases/latest/download/gbu-one.apk" class="btn btn-gold action-download-btn" id="closingDownloadBtn" download>Download for Android</a>
         </div>
       </div>
     </section>
@@ -2091,7 +2097,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
       <img src="assets/logo.svg" alt="" width="24" height="24">
       <span>GBU One</span>
     </div>
-    <a href="assets/gbu-one-latest-release.apk" class="btn btn-gold action-download-btn" id="stickyDownloadBtn" download>Download</a>
+    <a href="https://github.com/acro777x/gbuone-landing-page/releases/latest/download/gbu-one.apk" class="btn btn-gold action-download-btn" id="stickyDownloadBtn" download>Download</a>
   </div>
 
   <!-- Toast Notification Container -->
@@ -2100,9 +2106,9 @@ a, button { -webkit-tap-highlight-color: transparent; }
   <script>
     /* Configuration Object per docs/04_INTERACTIONS_AND_MOBILE_RULES.md */
     const CONFIG = {
-      apkUrl: "assets/gbu-one-latest-release.apk",
+      apkUrl: "https://github.com/acro777x/gbuone-landing-page/releases/latest/download/gbu-one.apk",
       version: "1.0.0",
-      apkSize: "123 MB",
+      apkSize: "98.6 MB",
       sha256: "5b3b804e1161115c482ac6a859df0dc94cba0c395805ad59c3520f1f1db7b58a",
       iosAvailable: false,
       contactEmail: "support@gbuone.space"
